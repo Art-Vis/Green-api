@@ -1,0 +1,40 @@
+* {
+	box-sizing: border-box;
+}
+
+html {
+	box-sizing: inherit;
+}
+
+:root {
+}
+
+a {
+}
+
+body {
+	margin: 0;
+	display: flex;
+	place-items: center;
+	min-width: 320px;
+	min-height: 100vh;
+}
+
+h1,
+h2,
+h3,
+h4 {
+	margin: 0;
+}
+
+button {
+	background-color: transparent;
+	border: 2px solid transparent;
+	cursor: pointer;
+	padding: 0;
+	transition: all 0.3s ease-in-out;
+}
+
+textarea {
+	resize: none;
+}
