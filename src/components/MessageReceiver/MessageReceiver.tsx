@@ -1,11 +1,18 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, FC } from 'react';
 import axios from 'axios';
-import { API_PARAMS } from '../utils/constants';
+import './MessageReceiver.css';
+import { AuthData } from '../type/interface';
 
-const MessageReceiver = () => {
-	const [receivedMessages, setReceivedMessages] = useState<string[]>([]);
+interface MessageReceiverProps {
+	authData: AuthData;
+}
+
+const MessageReceiver: FC<MessageReceiverProps> = ({ authData }) => {
+	const [receivedMessages, setReceivedMessages] = useState<
+		{ text: string; isMyMessage: boolean }[]
+	>([]);
 	const receivedMessagesRef = useRef<string[]>([]);
-	const { apiUrl, idInstance, apiTokenInstance, seconds } = API_PARAMS;
+	const { apiUrl, idInstance, apiTokenInstance, seconds } = authData;
 
 	useEffect(() => {
 		const fetchMessages = async () => {
@@ -21,14 +28,18 @@ const MessageReceiver = () => {
 				const incomingMessage =
 					message?.body?.messageData?.textMessageData?.textMessage;
 				const chatName = message?.body?.senderData?.chatName;
-
+				const senderId = message?.body?.senderData?.sender;
+				const idInstanceWid = message?.body?.instanceData?.wid;
 				if (
 					incomingMessage &&
 					!receivedMessagesRef.current.includes(incomingMessage)
 				) {
 					setReceivedMessages(prevMessages => [
 						...prevMessages,
-						`${chatName}: ${incomingMessage}`,
+						{
+							text: `${chatName}: ${incomingMessage}`,
+							isMyMessage: idInstanceWid === senderId,
+						},
 					]);
 					receivedMessagesRef.current = [
 						...receivedMessagesRef.current,
@@ -49,13 +60,17 @@ const MessageReceiver = () => {
 	}, []);
 
 	return (
-		<div>
+		<div className='chat-window__loading-message'>
 			{receivedMessages.map((msg, index) => (
 				<p
-					className='chat-window__message chat-window__message-sender'
+					className={`chat-window__message ${
+						msg.isMyMessage
+							? 'chat-window__message-my'
+							: 'chat-window__message-sender'
+					}`}
 					key={index}
 				>
-					{msg}
+					{msg.text}
 				</p>
 			))}
 		</div>

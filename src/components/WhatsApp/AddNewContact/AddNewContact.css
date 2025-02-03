@@ -53,3 +53,25 @@
 	font-size: 16px;
 	color: #000;
 }
+
+.chat-add__btn {
+	background-color: #25d366;
+	color: white;
+	font-size: 16px;
+	padding: 12px 24px;
+	border: none;
+	border-radius: 8px;
+	cursor: pointer;
+	transition: background-color 0.3s ease, transform 0.3s ease;
+	display: block;
+	width: 100%;
+	text-align: center;
+}
+
+.chat-add__btn:hover {
+	background-color: #128c7e;
+}
+
+.chat-add__btn:active {
+	background-color: #075e54;
+}

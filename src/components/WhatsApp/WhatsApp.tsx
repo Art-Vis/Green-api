@@ -1,27 +1,22 @@
 import { useState } from 'react';
 import './WhatsApp.css';
 import iconProfile from '@assets/zagl.png';
-import { GoSearch } from 'react-icons/go';
-import { FaArrowLeft } from 'react-icons/fa';
-import { HiOutlineDotsVertical } from 'react-icons/hi';
-import { FaPlus } from 'react-icons/fa6';
-import { IoSend } from 'react-icons/io5';
-import { API_PARAMS } from '../utils/constants';
 import axios from 'axios';
-import { BiMessageSquareAdd } from 'react-icons/bi';
 import AddNewContact from './AddNewContact/AddNewContact';
 import MessageReceiver from '../MessageReceiver/MessageReceiver';
-import useGetContacts from '../hooks/useGetContacts';
+import Header from './Header/Header';
+import Search from './Search/Search';
+import ChatList from './ChatList/ChatList';
+import ChatWindowHeader from './ChatWindowHeader/ChatWindowHeader';
+import InputSendMessage from './InputSendMessage/InputSendMessage';
+import { AuthData, Chat } from '../type/interface';
 
-interface Chat {
-	id?: number;
-	name: string;
-	phone: string;
-	lastMessage: string;
-	messages: { sender: string; text: string }[];
+interface WhatsAppProps {
+	authData: AuthData;
+	onLogout: () => void;
 }
 
-const WhatsApp: React.FC = () => {
+const WhatsApp: React.FC<WhatsAppProps> = ({ authData, onLogout }) => {
 	const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
 	const [isInputState, setIsInputState] = useState<boolean>(false);
 	const [message, setMessage] = useState('');
@@ -30,19 +25,17 @@ const WhatsApp: React.FC = () => {
 	const [showAddNewContact, setShowAddNewContact] = useState(false);
 	const [chats, setChats] = useState<Chat[]>([]);
 
-	const { apiUrl, idInstance, apiTokenInstance } = API_PARAMS;
-	// const contacts = useGetContacts(); // ПОЛУЧИТЬ СПИСОК КОНТАКТОВ
+	const { apiUrl, idInstance, apiTokenInstance } = authData;
 
 	const handleAddButtonClick = () => {
 		setShowAddNewContact(!showAddNewContact);
 	};
 
 	const handleAddContact = (phone: string) => {
-		// Добавляем новый контакт
 		const newChat: Chat = {
 			id: chats.length + 1,
 			name: `${phone}`,
-			phone: `${phone}`, // Можно добавить функционал для имени
+			phone: `${phone}`,
 			lastMessage: '',
 			messages: [],
 		};
@@ -55,7 +48,7 @@ const WhatsApp: React.FC = () => {
 		if (!message || !phoneNumber) return;
 
 		try {
-			const response = await axios.post(
+			await axios.post(
 				`${apiUrl}/waInstance${idInstance}/sendMessage/${apiTokenInstance}`,
 				{
 					chatId: `${phoneNumber}@c.us`,
@@ -102,7 +95,7 @@ const WhatsApp: React.FC = () => {
 	};
 
 	return (
-		<div className='container'>
+		<div className='chat'>
 			{showAddNewContact ? (
 				<AddNewContact
 					onAddContact={handleAddContact}
@@ -110,100 +103,38 @@ const WhatsApp: React.FC = () => {
 				/>
 			) : (
 				<div className='chat-list'>
-					<div className='chat-list__header'>
-						<h1 className='chat-list__title'>Чаты</h1>
-						<div className='chat-list__header-btns'>
-							<button
-								className='chat-list__header-btn add'
-								onClick={handleAddButtonClick}
-							>
-								<BiMessageSquareAdd />
-							</button>
-							<button className='chat-list__header-btn'>
-								<HiOutlineDotsVertical />
-							</button>
-						</div>
-					</div>
-					<label className='chat-list__search-label' htmlFor='searchInput'>
-						{isInputState ? (
-							<FaArrowLeft className='chat-list__search-svg green' />
-						) : (
-							<GoSearch className='chat-list__search-svg' />
-						)}
-						<input
-							className='chat-list__search-input'
-							id='searchInput'
-							type='search'
-							placeholder='Поиск'
-							onFocus={handleFocus}
-							onBlur={handleBlur}
-						/>
-					</label>
-					<div className='chat-list__items'>
-						{chats.map(chat => (
-							<div
-								key={chat.id}
-								onClick={() => setSelectedChat(chat)}
-								className='chat-list__item'
-							>
-								<img
-									className='chat-list__item-avatar'
-									src={iconProfile}
-									alt=''
-								/>
-								<div className='chat-list__item-info'>
-									<strong className='chat-list__item-name'>{chat.name}</strong>
-									<p className='chat-list__item-message'>{chat.lastMessage}</p>
-								</div>
-								<span className='chat-list__item-time'>10:42</span>
-							</div>
-						))}
-					</div>
+					<Header onAddButtonClick={handleAddButtonClick} onLogout={onLogout} />
+					<Search
+						isInputState={isInputState}
+						handleBlur={handleBlur}
+						handleFocus={handleFocus}
+					/>
+					<ChatList
+						chats={chats}
+						setSelectedChat={setSelectedChat}
+						iconProfile={iconProfile}
+					/>
 				</div>
 			)}
 
-			{/* Окно чата */}
 			<div className='chat-window'>
 				{selectedChat ? (
 					<>
-						<div className='chat-window__header'>
-							<div className='chat-window__header-wrap'>
-								<img className='chat-window__avatar' src={iconProfile} alt='' />
-								<h2 className='chat-window__name'>{selectedChat.name}</h2>
-							</div>
-
-							<div className='chat-window__header-btns'>
-								<button className='chat-window__header-btn'>
-									<GoSearch />
-								</button>
-								<button className='chat-window__header-btn'>
-									<HiOutlineDotsVertical />
-								</button>
-							</div>
-						</div>
+						<ChatWindowHeader
+							iconProfile={iconProfile}
+							selectedChat={selectedChat}
+						/>
 						<div className='chat-window__messages'>
-							<MessageReceiver />
+							<MessageReceiver authData={authData} />
 							<p className='chat-window__message chat-window__message-my'>
 								{selectedChat.lastMessage}
 							</p>
 						</div>
-						<div className='chat-window__send'>
-							<button className='chat-window__send-btn'>
-								<FaPlus />
-							</button>
-							<textarea
-								className='chat-window__input'
-								value={message}
-								onChange={e => setMessage(e.target.value)}
-								placeholder='Введите сообщение'
-							/>
-							<button
-								className='chat-window__send-btn'
-								onClick={handleSendMessage}
-							>
-								<IoSend />
-							</button>
-						</div>
+						<InputSendMessage
+							handleSendMessage={handleSendMessage}
+							message={message}
+							setMessage={setMessage}
+						/>
 					</>
 				) : (
 					<p className='chat-window__default-message'>Выберите чат</p>
